@@ -228,6 +228,34 @@
   overflow: hidden;
 }
 
+.chat-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.chat-tab {
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-tab:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.chat-tab.active {
+  color: #fff;
+  border-bottom-color: #4CAF50;
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .chat-header {
   padding: 0.9rem 1.5rem;
   background: rgba(255, 255, 255, 0.04);

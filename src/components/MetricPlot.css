@@ -1,0 +1,112 @@
+.metric-plot-container {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.metric-plot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.metric-plot-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.metric-plot-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.metric-plot-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.metric-plot-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.metric-plot-chart {
+  width: 100%;
+  height: 300px;
+}
+
+.metric-plot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.metric-plot-enlarged {
+  background: rgba(20, 20, 20, 0.95);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+  color: white;
+}
+
+.metric-plot-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-plot-enlarged h2 {
+  margin: 0 0 1.5rem 0;
+}
+
+.metric-plot-enlarged-chart {
+  width: 100%;
+  height: 500px;
+  margin-bottom: 1rem;
+}
+
+.metric-plot-download-btn {
+  padding: 0.75rem 1.5rem;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.metric-plot-download-btn:hover {
+  background: #45a049;
+}

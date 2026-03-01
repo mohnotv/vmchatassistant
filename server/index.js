@@ -47,7 +47,7 @@ app.get('/api/status', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const { username, password, email, firstName, lastName } = req.body;
     if (!username || !password)
       return res.status(400).json({ error: 'Username and password required' });
     const name = String(username).trim().toLowerCase();
@@ -58,6 +58,8 @@ app.post('/api/users', async (req, res) => {
       username: name,
       password: hashed,
       email: email ? String(email).trim().toLowerCase() : null,
+      firstName: firstName ? String(firstName).trim() : null,
+      lastName: lastName ? String(lastName).trim() : null,
       createdAt: new Date().toISOString(),
     });
     res.json({ ok: true });
@@ -76,7 +78,12 @@ app.post('/api/users/login', async (req, res) => {
     if (!user) return res.status(401).json({ error: 'User not found' });
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ error: 'Invalid password' });
-    res.json({ ok: true, username: name });
+    res.json({ 
+      ok: true, 
+      username: name,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
