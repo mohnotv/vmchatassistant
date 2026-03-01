@@ -11,13 +11,39 @@ app.use(express.json({ limit: '10mb' }));
 const URI = process.env.REACT_APP_MONGODB_URI || process.env.MONGODB_URI || process.env.REACT_APP_MONGO_URI;
 const DB = 'chatapp';
 
+if (!URI) {
+  console.error('ERROR: MONGODB_URI is not set in environment variables');
+  console.error('Please set MONGODB_URI in your Render dashboard environment variables');
+}
+
 let db;
+let dbReady = false;
 
 async function connect() {
-  const client = await MongoClient.connect(URI);
-  db = client.db(DB);
-  console.log('MongoDB connected');
+  if (!URI) {
+    throw new Error('MONGODB_URI environment variable is not set');
+  }
+  try {
+    const client = await MongoClient.connect(URI);
+    db = client.db(DB);
+    dbReady = true;
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    throw err;
+  }
 }
+
+// Middleware to check if database is ready
+const checkDb = (req, res, next) => {
+  if (!dbReady || !db) {
+    return res.status(503).json({ 
+      error: 'Database not connected. Please check server logs.',
+      details: URI ? 'Connection in progress or failed' : 'MONGODB_URI not configured'
+    });
+  }
+  next();
+};
 
 app.get('/', (req, res) => {
   res.send(`
@@ -33,19 +59,19 @@ app.get('/', (req, res) => {
   `);
 });
 
-app.get('/api/status', async (req, res) => {
+app.get('/api/status', checkDb, async (req, res) => {
   try {
     const usersCount = await db.collection('users').countDocuments();
     const sessionsCount = await db.collection('sessions').countDocuments();
-    res.json({ usersCount, sessionsCount });
+    res.json({ usersCount, sessionsCount, dbConnected: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, dbConnected: false });
   }
 });
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', checkDb, async (req, res) => {
   try {
     const { username, password, email, firstName, lastName } = req.body;
     if (!username || !password)
@@ -68,7 +94,7 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
-app.post('/api/users/login', async (req, res) => {
+app.post('/api/users/login', checkDb, async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password)
@@ -91,7 +117,7 @@ app.post('/api/users/login', async (req, res) => {
 
 // ── Sessions ─────────────────────────────────────────────────────────────────
 
-app.get('/api/sessions', async (req, res) => {
+app.get('/api/sessions', checkDb, async (req, res) => {
   try {
     const { username } = req.query;
     if (!username) return res.status(400).json({ error: 'username required' });
@@ -114,7 +140,7 @@ app.get('/api/sessions', async (req, res) => {
   }
 });
 
-app.post('/api/sessions', async (req, res) => {
+app.post('/api/sessions', checkDb, async (req, res) => {
   try {
     const { username, agent } = req.body;
     if (!username) return res.status(400).json({ error: 'username required' });
@@ -132,7 +158,7 @@ app.post('/api/sessions', async (req, res) => {
   }
 });
 
-app.delete('/api/sessions/:id', async (req, res) => {
+app.delete('/api/sessions/:id', checkDb, async (req, res) => {
   try {
     await db.collection('sessions').deleteOne({ _id: new ObjectId(req.params.id) });
     res.json({ ok: true });
@@ -141,7 +167,7 @@ app.delete('/api/sessions/:id', async (req, res) => {
   }
 });
 
-app.patch('/api/sessions/:id/title', async (req, res) => {
+app.patch('/api/sessions/:id/title', checkDb, async (req, res) => {
   try {
     const { title } = req.body;
     await db.collection('sessions').updateOne(
@@ -156,7 +182,7 @@ app.patch('/api/sessions/:id/title', async (req, res) => {
 
 // ── Messages ─────────────────────────────────────────────────────────────────
 
-app.post('/api/messages', async (req, res) => {
+app.post('/api/messages', checkDb, async (req, res) => {
   try {
     const { session_id, role, content, imageData, charts, toolCalls } = req.body;
     if (!session_id || !role || content === undefined)
@@ -181,7 +207,7 @@ app.post('/api/messages', async (req, res) => {
   }
 });
 
-app.get('/api/messages', async (req, res) => {
+app.get('/api/messages', checkDb, async (req, res) => {
   try {
     const { session_id } = req.query;
     if (!session_id) return res.status(400).json({ error: 'session_id required' });
@@ -217,11 +243,25 @@ app.get('/api/messages', async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
+// Start server after MongoDB connection
 connect()
   .then(() => {
-    app.listen(PORT, () => console.log(`Server on http://localhost:${PORT}`));
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`MongoDB URI configured: ${URI ? 'Yes' : 'No'}`);
+      if (URI) {
+        // Log connection string with password hidden
+        const hiddenUri = URI.replace(/:[^:@]+@/, ':****@');
+        console.log(`MongoDB URI: ${hiddenUri}`);
+      }
+    });
   })
   .catch((err) => {
-    console.error('MongoDB connection failed:', err.message);
+    console.error('❌ MongoDB connection failed:', err.message);
+    console.error('Please check:');
+    console.error('  1. MONGODB_URI environment variable is set in Render dashboard');
+    console.error('  2. MongoDB Atlas IP whitelist includes Render IPs (0.0.0.0/0 for testing)');
+    console.error('  3. MongoDB username and password are correct');
+    console.error('  4. Network connectivity to MongoDB Atlas');
     process.exit(1);
   });
