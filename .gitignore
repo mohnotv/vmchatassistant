@@ -22,3 +22,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Test/utility files with potential secret patterns
+test-mongo.js
+list-models.js
